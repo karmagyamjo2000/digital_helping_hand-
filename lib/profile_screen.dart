@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'login_screen.dart';
+import 'task_repository.dart';
 import 'ui/ui_helpers.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -42,6 +43,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   void initState() {
     super.initState();
     displayName = widget.userName.isNotEmpty ? widget.userName : 'John Doe';
+    final savedImagePath = TaskRepository.profileImageFor(widget.userName);
+    if (!kIsWeb &&
+        savedImagePath.isNotEmpty &&
+        File(savedImagePath).existsSync()) {
+      _imageFile = File(savedImagePath);
+    }
     bio = 'Friendly and reliable neighbour, happy to help.';
     location = 'Brooklyn, NY';
     memberSince = 'March 2025';
@@ -202,6 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             _imageFile = File(file.path!);
             _loading = false;
           });
+          TaskRepository.setProfileImage(widget.userName, file.path!);
           return;
         }
       }

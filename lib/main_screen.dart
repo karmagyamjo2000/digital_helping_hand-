@@ -4,6 +4,7 @@ import 'requests_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'post_task_screen.dart';
+import 'sos_button.dart';
 import 'ui/ui_helpers.dart';
 
 class MainScreen extends StatefulWidget {
@@ -58,20 +59,8 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: screens[currentIndex],
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.white,
-        elevation: 6,
-        child: const Icon(Icons.add, color: Colors.green, size: 30),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PostTaskScreen(userName: widget.userName),
-            ),
-          );
-        },
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: SosButton(userName: widget.userName),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: GlassBottomNav(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -80,11 +69,33 @@ class _MainScreenState extends State<MainScreen> {
             children: [
               _navItem(Icons.home, "Home", 0),
               _navItem(Icons.assignment, "Requests", 1),
+              _postTaskItem(),
               _navItem(Icons.chat_bubble_outline, "Messages", 3),
               _navItem(Icons.person_outline, "Profile", 4),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _postTaskItem() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PostTaskScreen(userName: widget.userName),
+          ),
+        );
+      },
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.add_circle_outline, color: Colors.green, size: 26),
+          SizedBox(height: 4),
+          Text("Post", style: TextStyle(fontSize: 12, color: Colors.green)),
+        ],
       ),
     );
   }

@@ -13,6 +13,8 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
+  final TextEditingController searchController = TextEditingController();
+
   final List<Map<String, dynamic>> chats = [
     {
       'name': 'John Martinez',
@@ -48,8 +50,42 @@ class _MessagesScreenState extends State<MessagesScreen> {
     },
   ];
 
+  List<Map<String, dynamic>> get filteredChats {
+    final query = searchController.text.trim().toLowerCase();
+    if (query.isEmpty) return chats;
+
+    return chats.where((chat) {
+      final name = (chat['name'] as String).toLowerCase();
+      final message = (chat['msg'] as String).toLowerCase();
+      final status = (chat['status'] as String).toLowerCase();
+
+      return name.contains(query) ||
+          message.contains(query) ||
+          status.contains(query);
+    }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    searchController.removeListener(_onSearchChanged);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final visibleChats = filteredChats;
+
     return Scaffold(
       backgroundColor: kBackground,
       appBar: AppBar(
@@ -93,10 +129,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
             children: [
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
@@ -108,139 +140,157 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search, color: Colors.grey),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Search chats',
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey[500],
-                          fontSize: 15,
-                        ),
-                      ),
+                child: TextField(
+                  controller: searchController,
+                  style: GoogleFonts.poppins(fontSize: 15),
+                  decoration: InputDecoration(
+                    hintText: 'Search chats',
+                    hintStyle: GoogleFonts.poppins(
+                      color: Colors.grey[500],
+                      fontSize: 15,
                     ),
-                    const Icon(Icons.filter_alt_outlined, color: Colors.grey),
-                  ],
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    suffixIcon: searchController.text.isEmpty
+                        ? const Icon(
+                            Icons.filter_alt_outlined,
+                            color: Colors.grey,
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.close, color: Colors.grey),
+                            onPressed: searchController.clear,
+                          ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 15),
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
               Expanded(
-                child: ListView.separated(
-                  padding: EdgeInsets.zero,
-                  itemCount: chats.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (context, index) {
-                    final chat = chats[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatScreen(
-                              name: chat['name'] as String,
-                              avatarUrl: chat['avatar'] as String,
-                            ),
+                child: visibleChats.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No chats found',
+                          style: GoogleFonts.poppins(
+                            color: Colors.grey[600],
+                            fontSize: 15,
                           ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(22),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
                         ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            CircleAvatar(
-                              radius: 26,
-                              backgroundColor: Colors.blue.shade50,
-                              backgroundImage: NetworkImage(
-                                chat['avatar'] as String,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          chat['name'] as String,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        chat['time'] as String,
-                                        style: GoogleFonts.poppins(
-                                          color: Colors.grey[500],
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                      )
+                    : ListView.separated(
+                        padding: EdgeInsets.zero,
+                        itemCount: visibleChats.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) {
+                          final chat = visibleChats[index];
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChatScreen(
+                                    name: chat['name'] as String,
+                                    avatarUrl: chat['avatar'] as String,
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    chat['msg'] as String,
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.grey[700],
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    chat['status'] as String,
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.green.shade700,
-                                      fontSize: 12,
-                                    ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(22),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.03),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 6),
                                   ),
                                 ],
                               ),
-                            ),
-                            if ((chat['unread'] as int) > 0) ...[
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade600,
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Text(
-                                  '${chat['unread']}',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 26,
+                                    backgroundColor: Colors.blue.shade50,
+                                    backgroundImage: NetworkImage(
+                                      chat['avatar'] as String,
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                chat['name'] as String,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              chat['time'] as String,
+                                              style: GoogleFonts.poppins(
+                                                color: Colors.grey[500],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          chat['msg'] as String,
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey[700],
+                                            fontSize: 14,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          chat['status'] as String,
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.green.shade700,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if ((chat['unread'] as int) > 0) ...[
+                                    const SizedBox(width: 12),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.shade600,
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Text(
+                                        '${chat['unread']}',
+                                        style: GoogleFonts.poppins(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ],
-                          ],
-                        ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),

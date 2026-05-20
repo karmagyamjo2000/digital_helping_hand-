@@ -5,33 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'chat_screen.dart';
+import 'sos_button.dart';
 
 import 'ui/ui_helpers.dart';
 
 class TaskDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> task;
+  final String userName;
 
-  const TaskDetailsScreen({super.key, required this.task});
+  const TaskDetailsScreen({
+    super.key,
+    required this.task,
+    required this.userName,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackground,
 
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red,
-
-        onPressed: () {},
-
-        child: Text(
-          "SOS",
-
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      floatingActionButton: SosButton(userName: userName),
 
       body: SafeArea(
         child: SingleChildScrollView(

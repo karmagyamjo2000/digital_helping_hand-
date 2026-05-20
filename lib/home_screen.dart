@@ -135,21 +135,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
-  Widget _buildAvatar(String imageUrl, {double radius = 24}) {
+  Widget _buildAvatar(String imageUrl, {double radius = 24, String name = ''}) {
     Widget imageWidget;
 
-    if (!kIsWeb && imageUrl.isNotEmpty && File(imageUrl).existsSync()) {
+    if (imageUrl.isEmpty) {
+      imageWidget = _buildInitialsAvatar(name, radius);
+    } else if (!kIsWeb && File(imageUrl).existsSync()) {
       imageWidget = Image.file(File(imageUrl), fit: BoxFit.cover);
     } else {
       imageWidget = Image.network(
         imageUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: Colors.grey.shade200,
-            alignment: Alignment.center,
-            child: Icon(Icons.person, size: radius, color: Colors.blue),
-          );
+          return _buildInitialsAvatar(name, radius);
         },
       );
     }
@@ -162,6 +160,29 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.grey.shade200,
       ),
       child: ClipOval(child: imageWidget),
+    );
+  }
+
+  Widget _buildInitialsAvatar(String name, double radius) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    final initials = parts
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0])
+        .take(2)
+        .join()
+        .toUpperCase();
+
+    return Container(
+      color: Colors.blue.shade50,
+      alignment: Alignment.center,
+      child: Text(
+        initials.isEmpty ? '?' : initials,
+        style: GoogleFonts.poppins(
+          color: Colors.blue.shade700,
+          fontSize: radius * 0.62,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
@@ -295,26 +316,33 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
 
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
+                  ValueListenableBuilder<Map<String, String>>(
+                    valueListenable: TaskRepository.profileImages,
+                    builder: (context, profileImages, _) {
+                      final profileImage = profileImages[widget.userName] ?? '';
 
-                        MaterialPageRoute(
-                          builder: (_) => ProfileScreen(
-                            userName: widget.userName,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
 
-                            userKarma: widget.userKarma,
-                          ),
+                            MaterialPageRoute(
+                              builder: (_) => ProfileScreen(
+                                userName: widget.userName,
+
+                                userKarma: widget.userKarma,
+                              ),
+                            ),
+                          );
+                        },
+
+                        child: _buildAvatar(
+                          profileImage,
+                          radius: 28,
+                          name: widget.userName,
                         ),
                       );
                     },
-
-                    child: _buildAvatar(
-                      'https://i.pravatar.cc/150?img=3',
-
-                      radius: 28,
-                    ),
                   ),
                 ],
               ),
@@ -448,7 +476,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
 
                               MaterialPageRoute(
-                                builder: (_) => TaskDetailsScreen(task: task),
+                                builder: (_) => TaskDetailsScreen(
+                                  task: task,
+                                  userName: widget.userName,
+                                ),
                               ),
                             );
                           },
@@ -481,7 +512,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 // USER ROW
                                 Row(
                                   children: [
-                                    _buildAvatar(task['image'], radius: 25),
+                                    _buildAvatar(
+                                      task['image'],
+                                      radius: 25,
+                                      name: task['name'],
+                                    ),
 
                                     const SizedBox(width: 12),
 

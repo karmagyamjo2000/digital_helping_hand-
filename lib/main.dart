@@ -41,17 +41,19 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
+ @override
+void initState() {
+  super.initState();
 
-    Timer(const Duration(seconds: 3), () {
+  Future.delayed(const Duration(seconds: 3), () {
+    if (mounted) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => LoginScreen()),
       );
-    });
-  }
+    }
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 10),
               Text(
-                "Helping neighbours connect and support each other.",
+                "Where Kindness creates KARMA.",
                 style: GoogleFonts.poppins(fontSize: 16, color: Colors.white70),
                 textAlign: TextAlign.center,
               ),

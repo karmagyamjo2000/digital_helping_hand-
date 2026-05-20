@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'task_repository.dart';
+import 'sos_button.dart';
 import 'ui/ui_helpers.dart';
 
 class PostTaskScreen extends StatefulWidget {
@@ -159,21 +160,23 @@ class _PostTaskScreenState extends State<PostTaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackground,
-
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red,
-
-        onPressed: () {},
-
-        child: Text(
-          "SOS",
-
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white.withValues(alpha: 0.98),
+        leading: Navigator.canPop(context)
+            ? const BackButton(color: Colors.black)
+            : null,
+        title: Text(
+          "Post Task",
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: Colors.black,
             fontWeight: FontWeight.bold,
+            fontSize: 16,
           ),
         ),
       ),
+
+      floatingActionButton: SosButton(userName: widget.userName),
 
       body: SafeArea(
         child: SingleChildScrollView(
@@ -183,21 +186,6 @@ class _PostTaskScreenState extends State<PostTaskScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
 
             children: [
-              const SizedBox(height: 10),
-
-              Center(
-                child: Text(
-                  "POST TASK",
-
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
               // TASK TITLE
               fieldLabel("Task Title"),
 

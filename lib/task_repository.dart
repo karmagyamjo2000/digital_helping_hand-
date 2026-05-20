@@ -17,7 +17,7 @@ class TaskRepository {
           'status': 'Open',
           'helper': 'Waiting for helper',
           'location': 'Garage to upstairs room',
-          'image': 'https://i.pravatar.cc/150?img=12',
+          'image': 'https://randomuser.me/api/portraits/men/32.jpg',
         },
         {
           'id': 'task-2',
@@ -33,7 +33,7 @@ class TaskRepository {
           'status': 'Open',
           'helper': 'Waiting for helper',
           'location': 'Living room',
-          'image': 'https://i.pravatar.cc/150?img=5',
+          'image': 'https://randomuser.me/api/portraits/women/44.jpg',
         },
         {
           'id': 'task-3',
@@ -48,15 +48,28 @@ class TaskRepository {
           'status': 'Open',
           'helper': 'Waiting for helper',
           'location': 'Aldi store',
-          'image': 'https://i.pravatar.cc/150?img=8',
+          'image': 'https://randomuser.me/api/portraits/men/41.jpg',
         },
       ]);
 
   static final ValueNotifier<List<Map<String, String>>> notifications =
       ValueNotifier<List<Map<String, String>>>([]);
 
+  static final ValueNotifier<Map<String, String>> profileImages =
+      ValueNotifier<Map<String, String>>({});
+
   static String _generateId() =>
       DateTime.now().millisecondsSinceEpoch.toString();
+
+  static String profileImageFor(String userName) {
+    return profileImages.value[userName] ?? '';
+  }
+
+  static void setProfileImage(String userName, String imagePath) {
+    if (userName.isEmpty || imagePath.isEmpty) return;
+
+    profileImages.value = {...profileImages.value, userName: imagePath};
+  }
 
   static void addTask(Map<String, dynamic> task) {
     final newTask = {
@@ -72,7 +85,8 @@ class TaskRepository {
       'status': task['status'] ?? 'Open',
       'helper': task['helper'] ?? 'Waiting for helper',
       'location': task['location'] ?? '',
-      'image': task['image'] ?? 'https://i.pravatar.cc/150?img=15',
+      'image':
+          task['image'] ?? 'https://randomuser.me/api/portraits/lego/1.jpg',
     };
     tasks.value = [newTask, ...tasks.value];
   }
@@ -105,6 +119,52 @@ class TaskRepository {
       task['name'],
       'Your request "${task['title']}" was accepted by $helperName.',
     );
+  }
+
+  static int sendEmergencyAlert(String senderName) {
+    final recipients = <String>{};
+
+    for (final task in tasks.value) {
+      final taskOwner = task['name']?.toString() ?? '';
+      final helper = task['helper']?.toString() ?? '';
+
+      if (taskOwner.isNotEmpty && taskOwner != senderName) {
+        recipients.add(taskOwner);
+      }
+
+      if (helper.isNotEmpty &&
+          helper != 'Waiting for helper' &&
+          helper != senderName) {
+        recipients.add(helper);
+      }
+    }
+
+    final message =
+        'Emergency SOS from $senderName. Please check in or offer immediate help.';
+    final emergencyTask = {
+      'id': 'sos-${_generateId()}',
+      'name': senderName,
+      'title': 'Emergency assistance needed',
+      'description':
+          '$senderName has triggered an SOS alert and needs immediate help nearby.',
+      'distance': 'Nearby',
+      'karma': '0',
+      'time': 'Now',
+      'category': 'Emergency',
+      'urgency': 'Urgent',
+      'status': 'Open',
+      'helper': 'Waiting for helper',
+      'location': 'Current location',
+      'image': 'https://randomuser.me/api/portraits/lego/1.jpg',
+    };
+
+    tasks.value = [emergencyTask, ...tasks.value];
+    notifications.value = [
+      ...notifications.value,
+      ...recipients.map((user) => {'user': user, 'message': message}),
+    ];
+
+    return recipients.length;
   }
 
   static void notifyUser(String userName, String message) {
